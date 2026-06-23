@@ -15,8 +15,11 @@ class PurchaseDetail(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     machine_id: Optional[int] = Field(default=None, foreign_key="machine.id")
     vendor: Optional[str] = None
+    manufacturer: Optional[str] = None
+    hospital_serial_number: Optional[str] = None
     purchase_date: Optional[datetime] = None
     price: Optional[float] = None
+    safety_standard: Optional[str] = None
 
 
 class Machine(SQLModel, table=True):

@@ -6,13 +6,15 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f5f5;
-  color: #333;
+  background: radial-gradient(circle at top left, #eaf6ff, transparent 45%),
+              radial-gradient(circle at bottom right, #fbe8ff, transparent 30%),
+              #f3f7fb;
+  color: #1f2937;
   line-height: 1.6;
 }
 
 header {
-  background: linear-gradient(135deg, #0066cc 0%, #00a86b 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
   color: white;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -66,11 +68,93 @@ main {
 }
 
 .container {
-  background: white;
-  border-radius: 8px;
+  background: rgba(255,255,255,0.94);
+  border-radius: 20px;
   padding: 30px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
   margin-bottom: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.summary-card {
+  padding: 22px;
+  border-radius: 20px;
+  color: white;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+.summary-card span {
+  font-size: 0.95em;
+  opacity: 0.9;
+}
+
+.summary-card strong {
+  font-size: 2.4em;
+  line-height: 1;
+}
+
+.total-card {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+}
+
+.active-card {
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+}
+
+.maintenance-card {
+  background: linear-gradient(135deg, #f97316, #fbbf24);
+}
+
+.offline-card {
+  background: linear-gradient(135deg, #ef4444, #f43f5e);
+}
+
+.table-header {
+  margin-bottom: 18px;
+}
+
+.table-header h2 {
+  margin-bottom: 8px;
+}
+
+.table-header p {
+  color: #475569;
+  max-width: 650px;
+}
+
+.machines-table tr:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.machines-table th,
+.machines-table td {
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.machines-table tr:hover td {
+  transform: translateX(2px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  color: white;
+  width: auto;
+  padding: 10px 18px;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #3730a3, #0284c7);
 }
 
 /* Tables */
@@ -378,16 +462,21 @@ main {
 
 /* Machine detail */
 .machine-detail h2 {
-  color: #0066cc;
-  margin-bottom: 20px;
-  font-size: 2em;
+  color: #1d4ed8;
+  margin-bottom: 10px;
+  font-size: 2.3em;
+}
+
+.machine-tagline {
+  color: #475569;
+  margin-top: 8px;
 }
 
 .machine-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  margin-bottom: 30px;
+  align-items: flex-start;
+  margin-bottom: 24px;
   gap: 20px;
 }
 
@@ -400,6 +489,57 @@ main {
 
 .machine-meta p {
   margin: 0;
+}
+
+.about-section {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 22px;
+  margin-bottom: 32px;
+}
+
+.about-card,
+.feature-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.06);
+}
+
+.about-card h3,
+.feature-card h3 {
+  margin-bottom: 18px;
+  color: #1d4ed8;
+}
+
+.about-card p,
+.feature-card p {
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.feature-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-card li {
+  padding-left: 1.7em;
+  margin-bottom: 12px;
+  position: relative;
+  color: #1f2937;
+}
+
+.feature-card li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #2563eb;
+  font-size: 1.2em;
+  line-height: 1;
 }
 
 .demo-users {
@@ -449,6 +589,12 @@ footer {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .about-section {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   header {
     padding: 15px;
@@ -465,7 +611,7 @@ footer {
   }
 
   .container {
-    padding: 15px;
+    padding: 18px;
   }
 
   .machine-header {

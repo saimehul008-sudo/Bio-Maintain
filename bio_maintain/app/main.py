@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .database import init_db, get_session, engine
-from .models import User, Machine, MaintenanceLog, UsageLog, IssueReport
+from .models import User, Machine, PurchaseDetail, MaintenanceLog, UsageLog, IssueReport
 
 # Resolve absolute paths for templates and static
 app_dir = Path(__file__).parent
@@ -92,6 +92,16 @@ def on_startup():
             conn.execute(text('ALTER TABLE "user" ADD COLUMN password TEXT'))
             conn.commit()
 
+        result = conn.execute(text("PRAGMA table_info('purchasedetail')"))
+        purchase_columns = [row[1] for row in result]
+        if "manufacturer" not in purchase_columns:
+            conn.execute(text('ALTER TABLE "purchasedetail" ADD COLUMN manufacturer TEXT'))
+        if "hospital_serial_number" not in purchase_columns:
+            conn.execute(text('ALTER TABLE "purchasedetail" ADD COLUMN hospital_serial_number TEXT'))
+        if "safety_standard" not in purchase_columns:
+            conn.execute(text('ALTER TABLE "purchasedetail" ADD COLUMN safety_standard TEXT'))
+        conn.commit()
+
     session = get_session()
     default_users = [
         {"username": "doc1", "password": "docpass", "full_name": "Dr. Alice Johnson", "role": "doctor"},
@@ -133,6 +143,31 @@ def on_startup():
         m_log.end_time = datetime.utcnow()
         session.add(m_log)
 
+    existing_purchase_machine_ids = {pd.machine_id for pd in session.exec(select(PurchaseDetail)).all()}
+    purchase_details = [
+        {"name": "MRI Scanner A", "vendor": "MedEquip Supplies", "manufacturer": "MedEquip Corp", "hospital_serial_number": "HSP-MRI-001", "purchase_date": datetime(2023, 3, 12), "price": 350000.00, "safety_standard": "IEC 60601"},
+        {"name": "Ventilator V1", "vendor": "AirFlow Systems", "manufacturer": "AirFlow Tech", "hospital_serial_number": "HSP-VEN-005", "purchase_date": datetime(2024, 1, 22), "price": 120000.00, "safety_standard": "ISO 13485"},
+        {"name": "X-Ray Machine", "vendor": "ClearScan Medical", "manufacturer": "ClearScan Inc", "hospital_serial_number": "HSP-XR-011", "purchase_date": datetime(2022, 11, 8), "price": 220000.00, "safety_standard": "IEC 60601"},
+        {"name": "Syringe Pump", "vendor": "DoseCare", "manufacturer": "DoseCare Labs", "hospital_serial_number": "HSP-SP-021", "purchase_date": datetime(2024, 4, 5), "price": 8000.00, "safety_standard": "ISO 13485"},
+        {"name": "Oxygen Concentrator", "vendor": "PureLife Medical", "manufacturer": "PureLife Corp", "hospital_serial_number": "HSP-OC-007", "purchase_date": datetime(2023, 7, 30), "price": 15000.00, "safety_standard": "EN 60601"},
+        {"name": "CT Scanner", "vendor": "Precision Imaging", "manufacturer": "Precision Health", "hospital_serial_number": "HSP-CT-003", "purchase_date": datetime(2024, 2, 14), "price": 780000.00, "safety_standard": "IEC 60601"},
+        {"name": "Defibrillator", "vendor": "LifePulse", "manufacturer": "LifePulse Systems", "hospital_serial_number": "HSP-DF-002", "purchase_date": datetime(2023, 9, 12), "price": 25000.00, "safety_standard": "IEC 60601-2-4"},
+        {"name": "Patient Monitor", "vendor": "VitalView", "manufacturer": "VitalView Tech", "hospital_serial_number": "HSP-PM-014", "purchase_date": datetime(2023, 8, 19), "price": 18000.00, "safety_standard": "ISO 80601"},
+        {"name": "ECG Machine", "vendor": "CardioSense", "manufacturer": "CardioSense Labs", "hospital_serial_number": "HSP-ECG-009", "purchase_date": datetime(2024, 5, 2), "price": 13500.00, "safety_standard": "IEC 60601-2-25"},
+    ]
+    for detail in purchase_details:
+        machine = session.exec(select(Machine).where(Machine.name == detail["name"])).first()
+        if machine and machine.id not in existing_purchase_machine_ids:
+            session.add(PurchaseDetail(
+                machine_id=machine.id,
+                vendor=detail["vendor"],
+                manufacturer=detail["manufacturer"],
+                hospital_serial_number=detail["hospital_serial_number"],
+                purchase_date=detail["purchase_date"],
+                price=detail["price"],
+                safety_standard=detail["safety_standard"],
+            ))
+
     session.commit()
     session.close()
 
@@ -159,11 +194,15 @@ def index(request: Request):
     session = get_session()
     machines = session.exec(select(Machine)).all()
     scores = {m.id: device_health_score(session, m.id) for m in machines}
+    status_counts = {"Active": 0, "Under Maintenance": 0, "Offline": 0}
+    for m in machines:
+        status_counts[m.status] = status_counts.get(m.status, 0) + 1
     session.close()
     return templates.TemplateResponse("index.html", {
         "request": request,
         "machines": machines,
         "scores": scores,
+        "status_counts": status_counts,
         "user": user
     })
 
@@ -214,6 +253,7 @@ def machine_view(request: Request, machine_id: int):
     issues = session.exec(select(IssueReport).where(IssueReport.machine_id == machine_id)).all()
     maints = session.exec(select(MaintenanceLog).where(MaintenanceLog.machine_id == machine_id)).all()
     usages = session.exec(select(UsageLog).where(UsageLog.machine_id == machine_id)).all()
+    purchase_detail = session.exec(select(PurchaseDetail).where(PurchaseDetail.machine_id == machine_id)).first()
     score = device_health_score(session, machine_id)
     impact = calculate_downtime_impact(session, machine_id)
     
@@ -224,6 +264,7 @@ def machine_view(request: Request, machine_id: int):
         "issues": issues,
         "maints": maints,
         "usages": usages,
+        "purchase_detail": purchase_detail,
         "score": score,
         "impact": impact,
         "user": user

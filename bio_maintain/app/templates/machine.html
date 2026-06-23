@@ -2,16 +2,44 @@
 {% block content %}
   <div class="container machine-detail">
     <div class="machine-header">
-      <h2>{{machine.name}}</h2>
+      <div>
+        <h2>{{machine.name}}</h2>
+        <p class="machine-tagline">{{machine.model}} · {{machine.location}}</p>
+      </div>
       <div class="machine-meta">
         <p><strong>Model:</strong> {{machine.model}}</p>
         <p><strong>Serial:</strong> {{machine.serial}}</p>
         <p><strong>Location:</strong> {{machine.location}}</p>
-        <p><strong>Status:</strong> 
+        <p><strong>Status:</strong>
           <span class="status {% if machine.status == 'Active' %}active{% elif machine.status == 'Under Maintenance' %}maintenance{% else %}offline{% endif %}">
             {{machine.status}}
           </span>
         </p>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <div class="about-card">
+        <h3>Machine About</h3>
+        {% if purchase_detail %}
+          <p><strong>Vendor:</strong> {{purchase_detail.vendor}}</p>
+          <p><strong>Manufacturer:</strong> {{purchase_detail.manufacturer}}</p>
+          <p><strong>Hospital Serial #:</strong> {{purchase_detail.hospital_serial_number}}</p>
+          <p><strong>Purchase Date:</strong> {{purchase_detail.purchase_date.strftime('%Y-%m-%d') if purchase_detail.purchase_date else 'N/A'}}</p>
+          <p><strong>Purchase Price:</strong> {{'$' + '{:,.2f}'.format(purchase_detail.price) if purchase_detail.price else 'N/A'}}</p>
+          <p><strong>Safety Standard:</strong> {{purchase_detail.safety_standard}}</p>
+        {% else %}
+          <p>This machine does not have purchase details recorded yet.</p>
+        {% endif %}
+      </div>
+      <div class="feature-card">
+        <h3>Key Capabilities</h3>
+        <ul>
+          <li>Real-time equipment usage tracking</li>
+          <li>Automated maintenance and downtime alerts</li>
+          <li>Safety compliance monitoring</li>
+          <li>Integrated hospital asset logging</li>
+        </ul>
       </div>
     </div>
 

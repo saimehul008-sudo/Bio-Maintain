@@ -1,7 +1,30 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="container">
-    <h2>Medical Machines</h2>
+    <div class="dashboard-grid">
+      <div class="summary-card total-card">
+        <span>Total Machines</span>
+        <strong>{{ machines | length }}</strong>
+      </div>
+      <div class="summary-card active-card">
+        <span>Active</span>
+        <strong>{{ status_counts['Active'] }}</strong>
+      </div>
+      <div class="summary-card maintenance-card">
+        <span>Under Maintenance</span>
+        <strong>{{ status_counts['Under Maintenance'] }}</strong>
+      </div>
+      <div class="summary-card offline-card">
+        <span>Offline</span>
+        <strong>{{ status_counts['Offline'] }}</strong>
+      </div>
+    </div>
+
+    <div class="table-header">
+      <h2>Medical Machines</h2>
+      <p>Browse machine status, health metrics, and maintenance details with a polished command center layout.</p>
+    </div>
+
     <table class="machines-table">
       <thead>
         <tr>
