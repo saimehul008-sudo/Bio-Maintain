@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Bio-Maintain - Medical Machine Tracking</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <h1>🏥 Bio-Maintain</h1>
+        <p class="tagline">Medical Machine Lifecycle Management</p>
+      </div>
+      <nav>
+        <a href="/">Machines</a>
+        {% if user %}
+          <span class="user-info">{{ user.full_name }} ({{ user.role }})</span>
+          <a href="/logout">Logout</a>
+        {% else %}
+          <a href="/login">Login</a>
+        {% endif %}
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <p>&copy; 2026 Bio-Maintain. Medical Equipment Tracking System.</p>
+    </footer>
+  </body>
+</html>

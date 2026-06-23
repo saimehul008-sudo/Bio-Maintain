@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container machine-detail">
+    <div class="machine-header">
+      <h2>{{machine.name}}</h2>
+      <div class="machine-meta">
+        <p><strong>Model:</strong> {{machine.model}}</p>
+        <p><strong>Serial:</strong> {{machine.serial}}</p>
+        <p><strong>Location:</strong> {{machine.location}}</p>
+        <p><strong>Status:</strong> 
+          <span class="status {% if machine.status == 'Active' %}active{% elif machine.status == 'Under Maintenance' %}maintenance{% else %}offline{% endif %}">
+            {{machine.status}}
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <div class="health-section">
+      <h3>Device Health Score</h3>
+      <div class="health-score-large">
+        <div class="score-number {% if score >= 80 %}excellent{% elif score >= 60 %}good{% else %}poor{% endif %}">
+          {{score}}%
+        </div>
+        <div class="score-bar">
+          <div class="score-fill" style="width: {{score}}%; background: {% if score >= 80 %}#28a745{% elif score >= 60 %}#ffc107{% else %}#dc3545{% endif %};"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schematic-section">
+      <h3>Machine Schematic</h3>
+      <svg class="machine-schematic" width="600" height="300" viewBox="0 0 600 300">
+        <!-- Background -->
+        <rect x="10" y="10" width="580" height="280" fill="#f9f9f9" stroke="#333" stroke-width="2"/>
+        
+        <!-- Main device body -->
+        <rect x="50" y="50" width="500" height="200" fill="#e8f4f8" stroke="#0066cc" stroke-width="2"/>
+        
+        <!-- Power core -->
+        <circle cx="100" cy="120" r="35" fill="#87ceeb" stroke="#0066cc" stroke-width="2"/>
+        <text x="100" y="125" text-anchor="middle" fill="#333" font-weight="bold">CORE</text>
+        
+        <!-- Processing unit -->
+        <rect x="180" y="80" width="120" height="80" fill="#ffd59e" stroke="#ff9500" stroke-width="2" rx="5"/>
+        <text x="240" y="125" text-anchor="middle" fill="#333" font-weight="bold">CPU</text>
+        
+        <!-- Display interface -->
+        <rect x="340" y="85" width="100" height="70" fill="#d4e6f1" stroke="#004d99" stroke-width="2" rx="3"/>
+        <line x1="345" y1="90" x2="435" y2="90" stroke="#004d99" stroke-width="1"/>
+        <line x1="345" y1="98" x2="435" y2="98" stroke="#004d99" stroke-width="1"/>
+        <line x1="345" y1="106" x2="435" y2="106" stroke="#004d99" stroke-width="1"/>
+        <text x="390" y="155" text-anchor="middle" fill="#333" font-size="12">Display</text>
+        
+        <!-- Connection nodes -->
+        <circle cx="520" cy="100" r="8" fill="#ff6b6b" stroke="#cc0000" stroke-width="1"/>
+        <circle cx="520" cy="150" r="8" fill="#51cf66" stroke="#2d7a2d" stroke-width="1"/>
+        
+        <!-- Status indicators -->
+        <text x="50" y="270" fill="#666" font-size="12">Power: <tspan fill="#51cf66" font-weight="bold">ON</tspan></text>
+        <text x="200" y="270" fill="#666" font-size="12">Temp: <tspan fill="#333">36.5°C</tspan></text>
+        <text x="400" y="270" fill="#666" font-size="12">Efficiency: <tspan fill="#333">{{score}}%</tspan></text>
+      </svg>
+    </div>
+
+    <div class="impact-section">
+      <h3>Impact Analysis</h3>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <h4>Downtime</h4>
+          <p class="impact-value">{{impact.total_downtime_hours}}h</p>
+        </div>
+        <div class="impact-card">
+          <h4>Procedures Delayed</h4>
+          <p class="impact-value">{{impact.procedures_delayed}}</p>
+        </div>
+        <div class="impact-card">
+          <h4>Est. Revenue Loss</h4>
+          <p class="impact-value">{{impact.estimated_revenue_loss}}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Usage History</h3>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Effectiveness</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usages %}
+            <tr>
+              <td>{{u.user or 'N/A'}}</td>
+              <td>{{u.start_time.strftime('%Y-%m-%d %H:%M') if u.start_time else 'N/A'}}</td>
+              <td>{{u.end_time.strftime('%Y-%m-%d %H:%M') if u.end_time else 'Running'}}</td>
+              <td>{{u.effectiveness or 'N/A'}}%</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4">No usage logs</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3>Maintenance History</h3>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Performed By</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Duration</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in maints %}
+            <tr>
+              <td>{{m.performed_by or 'N/A'}}</td>
+              <td>{{m.start_time.strftime('%Y-%m-%d %H:%M')}}</td>
+              <td>{{m.end_time.strftime('%Y-%m-%d %H:%M') if m.end_time else 'Ongoing'}}</td>
+              <td>
+                {% if m.end_time %}
+                  {% set duration = (m.end_time - m.start_time).total_seconds() / 3600 %}
+                  {{"{:.1f}".format(duration)}}h
+                {% else %}
+                  In Progress
+                {% endif %}
+              </td>
+              <td>{{m.notes or '-'}}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5">No maintenance records</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3>Issue Reports</h3>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Reported By</th>
+            <th>Severity</th>
+            <th>Date</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in issues %}
+            <tr>
+              <td>{{i.reported_by or 'Anonymous'}}</td>
+              <td>
+                <span class="severity severity-{{i.severity}}">{{i.severity}}</span>
+              </td>
+              <td>{{i.created_at.strftime('%Y-%m-%d %H:%M')}}</td>
+              <td>{{i.notes or '-'}}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4">No issues reported</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions-section">
+      <h3>Actions</h3>
+      
+      <div class="action-form">
+        <h4>Report an Issue</h4>
+        <form method="post" action="/machine/{{machine.id}}/report" class="inline-form">
+          <input type="text" name="reported_by" placeholder="Your name" required/>
+          <select name="severity">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+          <input type="text" name="notes" placeholder="Issue notes" required/>
+          <button type="submit" class="btn btn-warning">Report Issue</button>
+        </form>
+      </div>
+
+      {% if user and user.role in ['doctor', 'technician', 'admin'] %}
+        <div class="action-form">
+          <h4>Maintenance Actions</h4>
+          {% if machine.status == 'Active' %}
+            <form method="post" action="/machine/{{machine.id}}/claim" class="inline-form">
+              <button type="submit" class="btn btn-danger">Claim for Maintenance</button>
+            </form>
+          {% else %}
+            <form method="post" action="/machine/{{machine.id}}/release" class="inline-form">
+              <input type="text" name="notes" placeholder="Completion notes (optional)"/>
+              <button type="submit" class="btn btn-success">Release to Active</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="qr-section">
+        <h4>Machine QR Code</h4>
+        <p>Scan this code to quickly access this machine's profile:</p>
+        <img src="/machine/{{machine.id}}/qr" alt="QR Code" class="qr-full"/>
+      </div>
+    </div>
+  </div>
+{% endblock %}

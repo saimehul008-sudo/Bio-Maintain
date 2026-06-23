@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container">
+    <div class="login-box">
+      <h2>Login to Bio-Maintain</h2>
+      <form method="post" action="/login">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required placeholder="Enter username"/>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+      <div class="demo-users">
+        <h3>Demo Users</h3>
+        <ul>
+          <li><strong>doc1</strong> - Dr. Alice Johnson (Doctor)</li>
+          <li><strong>tech1</strong> - Bob Martinez (Technician)</li>
+          <li><strong>admin1</strong> - Admin User (Admin)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
