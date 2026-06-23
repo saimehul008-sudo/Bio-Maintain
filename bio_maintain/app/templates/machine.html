@@ -57,37 +57,61 @@
 
     <div class="schematic-section">
       <h3>Machine Schematic</h3>
-      <svg class="machine-schematic" width="600" height="300" viewBox="0 0 600 300">
-        <!-- Background -->
-        <rect x="10" y="10" width="580" height="280" fill="#f9f9f9" stroke="#333" stroke-width="2"/>
-        
-        <!-- Main device body -->
-        <rect x="50" y="50" width="500" height="200" fill="#e8f4f8" stroke="#0066cc" stroke-width="2"/>
-        
-        <!-- Power core -->
-        <circle cx="100" cy="120" r="35" fill="#87ceeb" stroke="#0066cc" stroke-width="2"/>
-        <text x="100" y="125" text-anchor="middle" fill="#333" font-weight="bold">CORE</text>
-        
-        <!-- Processing unit -->
-        <rect x="180" y="80" width="120" height="80" fill="#ffd59e" stroke="#ff9500" stroke-width="2" rx="5"/>
-        <text x="240" y="125" text-anchor="middle" fill="#333" font-weight="bold">CPU</text>
-        
-        <!-- Display interface -->
-        <rect x="340" y="85" width="100" height="70" fill="#d4e6f1" stroke="#004d99" stroke-width="2" rx="3"/>
-        <line x1="345" y1="90" x2="435" y2="90" stroke="#004d99" stroke-width="1"/>
-        <line x1="345" y1="98" x2="435" y2="98" stroke="#004d99" stroke-width="1"/>
-        <line x1="345" y1="106" x2="435" y2="106" stroke="#004d99" stroke-width="1"/>
-        <text x="390" y="155" text-anchor="middle" fill="#333" font-size="12">Display</text>
-        
-        <!-- Connection nodes -->
-        <circle cx="520" cy="100" r="8" fill="#ff6b6b" stroke="#cc0000" stroke-width="1"/>
-        <circle cx="520" cy="150" r="8" fill="#51cf66" stroke="#2d7a2d" stroke-width="1"/>
-        
-        <!-- Status indicators -->
-        <text x="50" y="270" fill="#666" font-size="12">Power: <tspan fill="#51cf66" font-weight="bold">ON</tspan></text>
-        <text x="200" y="270" fill="#666" font-size="12">Temp: <tspan fill="#333">36.5°C</tspan></text>
-        <text x="400" y="270" fill="#666" font-size="12">Efficiency: <tspan fill="#333">{{score}}%</tspan></text>
+      {% if 'MRI' in machine.name or 'CT' in machine.name %}
+      <svg class="machine-schematic" width="600" height="320" viewBox="0 0 600 320">
+        <rect x="0" y="0" width="600" height="320" rx="24" fill="#071124" />
+        <circle cx="300" cy="170" r="90" fill="#0f172a" stroke="#38bdf8" stroke-width="3" opacity="0.95" />
+        <circle cx="300" cy="170" r="56" fill="#0f172a" stroke="#818cf8" stroke-width="2" />
+        <circle cx="300" cy="170" r="24" fill="#60a5fa" />
+        <rect x="200" y="216" width="200" height="50" rx="18" fill="#0f172a" stroke="#64748b" stroke-width="2" />
+        <text x="300" y="110" text-anchor="middle" fill="#e2e8f0" font-size="20" font-weight="700">SCAN</text>
+        <text x="300" y="140" text-anchor="middle" fill="#94a3b8" font-size="14">Rotating gantry unit</text>
+        <text x="300" y="248" text-anchor="middle" fill="#c7d2fe" font-size="13">Patient bed / carriage</text>
+        <line x1="170" y1="170" x2="70" y2="170" stroke="#38bdf8" stroke-width="4" opacity="0.6" />
+        <line x1="430" y1="170" x2="530" y2="170" stroke="#38bdf8" stroke-width="4" opacity="0.6" />
+        <rect x="45" y="152" width="30" height="36" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+        <rect x="525" y="152" width="30" height="36" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
       </svg>
+      {% elif 'Ventilator' in machine.name or 'Oxygen' in machine.name %}
+      <svg class="machine-schematic" width="600" height="320" viewBox="0 0 600 320">
+        <rect x="0" y="0" width="600" height="320" rx="24" fill="#071124" />
+        <rect x="120" y="70" width="360" height="180" rx="28" fill="#0f172a" stroke="#22d3ee" stroke-width="3" />
+        <rect x="160" y="98" width="280" height="112" rx="18" fill="#020617" stroke="#7dd3fc" stroke-width="2" />
+        <circle cx="225" cy="150" r="24" fill="#38bdf8" />
+        <circle cx="375" cy="150" r="24" fill="#22d3ee" />
+        <text x="250" y="110" text-anchor="middle" fill="#c7d2fe" font-size="16" font-weight="700">Pressure</text>
+        <text x="352" y="110" text-anchor="middle" fill="#c7d2fe" font-size="16" font-weight="700">Flow</text>
+        <path d="M240 165 Q280 145 320 160 T400 165" stroke="#60a5fa" stroke-width="4" fill="none" />
+        <rect x="460" y="120" width="80" height="90" rx="16" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+        <text x="500" y="160" text-anchor="middle" fill="#c7d2fe" font-size="14">O2</text>
+        <path d="M500 188 L500 220" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+        <path d="M500 220 Q490 232 472 235" stroke="#38bdf8" stroke-width="4" fill="none" />
+      </svg>
+      {% elif 'ECG' in machine.name or 'Patient Monitor' in machine.name or 'X-Ray' in machine.name %}
+      <svg class="machine-schematic" width="600" height="320" viewBox="0 0 600 320">
+        <rect x="0" y="0" width="600" height="320" rx="24" fill="#071124" />
+        <rect x="90" y="80" width="420" height="160" rx="26" fill="#0f172a" stroke="#818cf8" stroke-width="3" />
+        <rect x="130" y="110" width="340" height="100" rx="14" fill="#020617" stroke="#60a5fa" stroke-width="2" />
+        <path d="M150 160 L190 130 L230 170 L270 145 L310 160 L350 140 L390 160 L430 135 L470 155" stroke="#22d3ee" stroke-width="5" fill="none" stroke-linecap="round" />
+        <circle cx="170" cy="150" r="5" fill="#38bdf8" />
+        <circle cx="450" cy="148" r="5" fill="#38bdf8" />
+        <rect x="120" y="210" width="90" height="50" rx="16" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+        <rect x="390" y="210" width="90" height="50" rx="16" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+        <text x="165" y="240" fill="#c7d2fe" text-anchor="middle" font-size="12">Battery</text>
+        <text x="435" y="240" fill="#c7d2fe" text-anchor="middle" font-size="12">Sensors</text>
+      </svg>
+      {% else %}
+      <svg class="machine-schematic" width="600" height="320" viewBox="0 0 600 320">
+        <rect x="0" y="0" width="600" height="320" rx="24" fill="#071124" />
+        <rect x="110" y="86" width="380" height="148" rx="28" fill="#0f172a" stroke="#38bdf8" stroke-width="3" />
+        <rect x="150" y="116" width="120" height="88" rx="16" fill="#020617" stroke="#60a5fa" stroke-width="2" />
+        <rect x="330" y="116" width="120" height="88" rx="16" fill="#020617" stroke="#818cf8" stroke-width="2" />
+        <path d="M270 140 C300 120 330 140 360 140" stroke="#60a5fa" stroke-width="4" fill="none" />
+        <text x="210" y="150" fill="#c7d2fe" font-size="14" font-weight="700">Core</text>
+        <text x="390" y="150" fill="#c7d2fe" font-size="14" font-weight="700">Panel</text>
+        <line x1="200" y1="230" x2="400" y2="230" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" />
+      </svg>
+      {% endif %}
     </div>
 
     <div class="impact-section">
