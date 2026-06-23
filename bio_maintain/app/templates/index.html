@@ -10,7 +10,6 @@
           <th>Model</th>
           <th>Status</th>
           <th>Health</th>
-          <th>QR</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -30,9 +29,6 @@
                 <div class="health-fill" style="width: {{scores[m.id]}}%; background: {% if scores[m.id] >= 80 %}#28a745{% elif scores[m.id] >= 60 %}#ffc107{% else %}#dc3545{% endif %};"></div>
               </div>
               <span class="health-score">{{scores[m.id]}}%</span>
-            </td>
-            <td>
-              <img src="/machine/{{m.id}}/qr" alt="QR" class="qr-thumb" title="Scan to view machine"/>
             </td>
             <td><a href="/machine/{{m.id}}" class="btn btn-sm">View</a></td>
           </tr>

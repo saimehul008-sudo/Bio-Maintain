@@ -1,10 +1,9 @@
 from fastapi import FastAPI, Request, Form, HTTPException, Depends, Response
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from sqlmodel import select
-from io import BytesIO
-import segno
 from datetime import datetime
 from pathlib import Path
 
@@ -85,31 +84,56 @@ def calculate_downtime_impact(session, machine_id: int):
 @app.on_event("startup")
 def on_startup():
     init_db()
-    # Create sample data if empty
+
+    with engine.connect() as conn:
+        result = conn.execute(text("PRAGMA table_info('user')"))
+        columns = [row[1] for row in result]
+        if "password" not in columns:
+            conn.execute(text('ALTER TABLE "user" ADD COLUMN password TEXT'))
+            conn.commit()
+
     session = get_session()
-    if session.exec(select(User)).first() is None:
-        session.add(User(username="doc1", full_name="Dr. Alice Johnson", role="doctor"))
-        session.add(User(username="tech1", full_name="Bob Martinez", role="technician"))
-        session.add(User(username="admin1", full_name="Admin User", role="admin"))
-        
-        m1 = Machine(name="MRI Scanner A", location="Imaging Ward 3", model="MRI-2000", serial="M2000-001")
-        m2 = Machine(name="Ventilator V1", location="ICU Room 5", model="VentX Pro", serial="V-981")
-        m3 = Machine(name="X-Ray Machine", location="Radiology", model="XR-500", serial="XR-500-02")
-        
-        session.add(m1)
-        session.add(m2)
-        session.add(m3)
-        
-        # Add sample usage and maintenance logs
+    default_users = [
+        {"username": "doc1", "password": "docpass", "full_name": "Dr. Alice Johnson", "role": "doctor"},
+        {"username": "tech1", "password": "techpass", "full_name": "Bob Martinez", "role": "technician"},
+        {"username": "admin1", "password": "adminpass", "full_name": "Admin User", "role": "admin"},
+    ]
+
+    default_machines = [
+        {"name": "MRI Scanner A", "location": "Imaging Ward 3", "model": "MRI-2000", "serial": "M2000-001"},
+        {"name": "Ventilator V1", "location": "ICU Room 5", "model": "VentX Pro", "serial": "V-981"},
+        {"name": "X-Ray Machine", "location": "Radiology", "model": "XR-500", "serial": "XR-500-02"},
+        {"name": "Syringe Pump", "location": "Ward 4", "model": "PumpSafe 200", "serial": "SP-102"},
+        {"name": "Oxygen Concentrator", "location": "Respiratory Care", "model": "OxyPure 50", "serial": "OC-050"},
+        {"name": "CT Scanner", "location": "Radiology Suite", "model": "CT-Pro 2.0", "serial": "CT-207"},
+        {"name": "Defibrillator", "location": "Emergency Dept", "model": "DefibX 300", "serial": "DF-300"},
+        {"name": "Patient Monitor", "location": "ICU Room 2", "model": "VitalGuard 11", "serial": "PM-110"},
+        {"name": "ECG Machine", "location": "Cardiology", "model": "HeartTrace 7", "serial": "ECG-700"},
+    ]
+
+    for user_data in default_users:
+        existing_user = session.exec(select(User).where(User.username == user_data["username"])).first()
+        if existing_user:
+            if not existing_user.password:
+                existing_user.password = user_data["password"]
+                session.add(existing_user)
+        else:
+            session.add(User(**user_data))
+
+    existing_machine_names = {m.name for m in session.exec(select(Machine)).all()}
+    for machine_data in default_machines:
+        if machine_data["name"] not in existing_machine_names:
+            session.add(Machine(**machine_data))
+
+    if session.exec(select(MaintenanceLog)).first() is None:
         u1 = UsageLog(machine_id=1, user="Dr. Smith", effectiveness=95)
         u1.end_time = datetime.utcnow()
         session.add(u1)
-        
         m_log = MaintenanceLog(machine_id=1, performed_by="tech1", notes="Routine calibration")
         m_log.end_time = datetime.utcnow()
         session.add(m_log)
-        
-        session.commit()
+
+    session.commit()
     session.close()
 
 
@@ -128,6 +152,10 @@ def get_current_user(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
     session = get_session()
     machines = session.exec(select(Machine)).all()
     scores = {m.id: device_health_score(session, m.id) for m in machines}
@@ -136,36 +164,47 @@ def index(request: Request):
         "request": request,
         "machines": machines,
         "scores": scores,
-        "user": get_current_user(request)
+        "user": user
     })
 
 
 @app.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    user = get_current_user(request)
+    if user:
+        return RedirectResponse(url="/", status_code=302)
+
+    error = request.query_params.get("error")
+    return templates.TemplateResponse("login.html", {"request": request, "error": error})
 
 
 @app.post("/login")
-def login(response: Response, username: str = Form(...)):
+def login(response: Response, username: str = Form(...), password: str = Form(...)):
     session = get_session()
     user = session.exec(select(User).where(User.username == username)).first()
     session.close()
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid user")
-    response = Response(status_code=302, headers={"Location": "/"})
+        return RedirectResponse(url="/login?error=Invalid+user", status_code=302)
+    if not user.password or user.password != password:
+        return RedirectResponse(url="/login?error=Invalid+password", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="user_id", value=str(user.id), max_age=86400)
     return response
 
 
 @app.get("/logout")
 def logout(response: Response):
-    response = Response(status_code=302, headers={"Location": "/"})
+    response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie("user_id")
     return response
 
 
 @app.get("/machine/{machine_id}", response_class=HTMLResponse)
 def machine_view(request: Request, machine_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
     session = get_session()
     machine = session.get(Machine, machine_id)
     if not machine:
@@ -187,7 +226,7 @@ def machine_view(request: Request, machine_id: int):
         "usages": usages,
         "score": score,
         "impact": impact,
-        "user": get_current_user(request)
+        "user": user
     })
 
 
@@ -263,10 +302,3 @@ def release_machine(machine_id: int, request: Request, notes: str = Form("")):
     return {"ok": True, "message": "Machine released back to active status"}
 
 
-@app.get("/machine/{machine_id}/qr")
-def qr_code(machine_id: int):
-    """Generate and return QR code for machine as SVG."""
-    url = f"http://localhost:8000/machine/{machine_id}"
-    qr = segno.make(url, micro=False)
-    svg_bytes = qr.save(None, kind='svg', scale=5)
-    return Response(content=svg_bytes, media_type="image/svg+xml")

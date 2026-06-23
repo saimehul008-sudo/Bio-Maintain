@@ -8,8 +8,15 @@
           <label for="username">Username:</label>
           <input type="text" id="username" name="username" required placeholder="Enter username"/>
         </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required placeholder="Enter password"/>
+        </div>
         <button type="submit" class="btn btn-primary">Login</button>
       </form>
+      {% if error %}
+      <div class="error-message">{{ error }}</div>
+      {% endif %}
       <div class="demo-users">
         <h3>Demo Users</h3>
         <ul>

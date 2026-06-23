@@ -7,6 +7,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str
     full_name: Optional[str] = None
+    password: Optional[str] = None
     role: str  # 'doctor', 'technician', 'admin'
 
 
