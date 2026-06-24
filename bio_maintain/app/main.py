@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from sqlmodel import select
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from .database import init_db, get_session, engine
@@ -189,7 +189,8 @@ def get_current_user(request: Request):
 def index(request: Request):
     user = get_current_user(request)
     if not user:
-        return RedirectResponse(url="/login", status_code=302)
+        error = request.query_params.get("error")
+        return templates.TemplateResponse("login.html", {"request": request, "error": error})
 
     session = get_session()
     machines = session.exec(select(Machine)).all()
@@ -256,6 +257,12 @@ def machine_view(request: Request, machine_id: int):
     purchase_detail = session.exec(select(PurchaseDetail).where(PurchaseDetail.machine_id == machine_id)).first()
     score = device_health_score(session, machine_id)
     impact = calculate_downtime_impact(session, machine_id)
+
+    next_due = None
+    if machine.last_maintenance:
+        next_due = machine.last_maintenance + timedelta(days=180)
+    elif purchase_detail and purchase_detail.purchase_date:
+        next_due = purchase_detail.purchase_date + timedelta(days=365)
     
     session.close()
     return templates.TemplateResponse("machine.html", {
@@ -267,6 +274,7 @@ def machine_view(request: Request, machine_id: int):
         "purchase_detail": purchase_detail,
         "score": score,
         "impact": impact,
+        "next_due": next_due,
         "user": user
     })
 
