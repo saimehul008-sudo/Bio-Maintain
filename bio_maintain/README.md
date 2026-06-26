@@ -23,12 +23,12 @@ python -m pip install -r requirements.txt
 
 2. Run the server:
 ```powershell
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. Open browser:
+3. Open browser on this machine or another device on the same network:
 ```
-http://127.0.0.1:8000
+http://<your-pc-ip>:8000
 ```
 
 4. Login with demo users:
